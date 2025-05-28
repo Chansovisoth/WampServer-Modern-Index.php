@@ -506,6 +506,22 @@ foreach ($languages as $lang) {
             }
         }
 
+        .fade-out {
+            animation: fadeOut 0.25s ease-in;
+        }
+
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+
+            to {
+                opacity: 0;
+                transform: translateY(-15px);
+            }
+        }
+
         .custom-scrollbar::-webkit-scrollbar {
             width: 8px;
         }
@@ -874,10 +890,10 @@ foreach ($languages as $lang) {
                                 <?php echo $langue === 'khmer' ? 'បន្ថែមគម្រោង' : 'Add Project'; ?>
                             </button>
                         </div>
-
                     </div>
 
                     <?php if (empty($projects)): ?>
+                        <!-- Display "No projects" -->
                         <div class="text-center py-12">
                             <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
@@ -890,20 +906,31 @@ foreach ($languages as $lang) {
                             </p>
                         </div>
                     <?php else: ?>
+                        <!-- Display all proojects -->
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             <?php foreach ($projects as $project): ?>
                                 <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-4 hover:shadow-md transition-shadow dark:hover:bg-gray-700">
                                     <div class="flex items-center justify-between mb-2">
-                                        <h4 class="font-medium text-gray-900 dark:text-white"><?php echo htmlspecialchars($project); ?></h4>
+                                        <div class="flex items-center space-x-1">
+                                            <h4 class="font-medium text-gray-900 dark:text-white"><?php echo htmlspecialchars($project); ?></h4>
+                                            <button onclick="navigator.clipboard.writeText('<?php echo addslashes(getcwd() . DIRECTORY_SEPARATOR . $project); ?>')" class="p-2 d-flex rounded-lg border border-0 bg-transparent text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors" title="<?php echo $langue === 'khmer' ? 'ចម្លងទីតាំង' : 'Copy Path'; ?>">
+                                                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <rect x="9" y="9" width="13" height="13" rx="2" stroke-width="2"></rect>
+                                                    <rect x="3" y="3" width="13" height="13" rx="2" stroke-width="2"></rect>
+                                                </svg>
+                                            </button>
+                                        </div>
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
                                             <?php echo $langue === 'khmer' ? 'ដំណើរការ' : 'Active'; ?>
                                         </span>
                                     </div>
-                                    <a href="http://localhost<?php echo $UrlPort; ?>/<?php echo urlencode($project); ?>/"
-                                        target="_blank"
-                                        class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">
-                                        <?php echo $langue === 'khmer' ? 'បើកគម្រោង →' : 'Open Project →'; ?>
-                                    </a>
+                                    <div class="flex items-center justify-between">
+                                        <a href="http://localhost<?php echo $UrlPort; ?>/<?php echo urlencode($project); ?>/"
+                                            target="_blank"
+                                            class="text-sm text-indigo-600 dark:text-indigo-400 hover:underline">
+                                            <?php echo $langue === 'khmer' ? 'បើកគម្រោង →' : 'Open Project →'; ?>
+                                        </a>
+                                    </div>
                                 </div>
                             <?php endforeach; ?>
                         </div>
@@ -1246,7 +1273,7 @@ foreach ($languages as $lang) {
                         </button>
 
                         <!-- Directory Dropdown -->
-                        <div id="directory-dropdown" class="hidden absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-48 overflow-y-auto">
+                        <div id="directory-dropdown" class="hidden absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-200 overflow-y-auto">
                             <div class="py-1">
                                 <div onclick="selectDirectory('')" class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer text-gray-900 dark:text-white">
                                     <span class="font-medium">www/</span> <span class="text-gray-500 dark:text-gray-400">(root)</span>
@@ -1336,8 +1363,14 @@ foreach ($languages as $lang) {
             document.getElementById(modalId).classList.remove('hidden');
         }
 
+        // Hide modal with fade-out effect with closed
         function hideModal(modalId) {
-            document.getElementById(modalId).classList.add('hidden');
+            // alert ("Debug: uwu");
+            document.getElementById(modalId).classList.add('fade-out');
+            setTimeout(() => {
+                document.getElementById(modalId).classList.add('hidden');
+                document.getElementById(modalId).classList.remove('fade-out');
+            }, 230); // Match the duration of the fade-out animation
         }
 
         // Close modal when clicking outside
@@ -1345,10 +1378,22 @@ foreach ($languages as $lang) {
             const modals = document.querySelectorAll('.modal');
             modals.forEach(modal => {
                 if (event.target === modal) {
-                    modal.classList.add('hidden');
+                    // modal.classList.add('hidden');
+                    hideModal(modal.id);
                 }
             });
         }
+
+        // Closse modal with Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                const modals = document.querySelectorAll('.modal');
+                modals.forEach(modal => {
+                    // modal.classList.add('hidden');
+                    hideModal(modal.id);
+                });
+            }
+        });
 
         // Initialize tab styles
         document.addEventListener('DOMContentLoaded', function() {
